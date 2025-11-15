@@ -1,5 +1,23 @@
-.bookings-list { list-style:none; padding:0; margin: 8px 0; }
-.booking-item { border-bottom: 1px solid #f3f4f6; padding: 10px 0; }
-.booking-row { display:flex; justify-content:space-between; align-items:center; gap:12px; }
-.muted { color:#6b7280; font-size:13px; margin-top:4px; }
-.danger { background:#ef4444; color:white; border:none; padding:8px 10px; border-radius:6px; cursor:pointer; }
+.my-booking-container {
+  max-width: 800px;
+  margin: 30px auto;
+  padding: 20px;
+}
+
+.booking-card {
+  background: white;
+  padding: 18px;
+  margin-bottom: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+}
+
+.booking-card button {
+  margin-top: 10px;
+  background: #dc2626;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 5px;
+  cursor: pointer;
+}

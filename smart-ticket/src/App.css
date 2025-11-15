@@ -1,15 +1,15 @@
-.header{
-  background: white;
-  padding: 14px 20px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+nav a {
+  margin-right: 15px;
+  color: #2563eb;
+  text-decoration: none;
 }
-.header h1 { margin: 0; font-size: 18px; color: #1f2937; }
-.nav a { margin-left: 14px; color: #2563eb; }
-.nav .user-name { margin-left: 12px; color: #374151; font-weight: 600; }
-.link-btn { margin-left: 12px; background:none; border: none; color: #ef4444; cursor:pointer; }
-.container { max-width: 1000px; margin: 22px auto; padding: 0 12px; }
-.card { background: white; padding: 16px; border-radius: 8px; box-shadow: 0 4px 18px rgba(20,20,60,0.04); }
-.footer { text-align:center; padding: 12px; color: #6b7280; }
+
+nav button {
+  margin-left: 10px;
+  padding: 6px 12px;
+  background: #dc2626;
+  border: none;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+}
