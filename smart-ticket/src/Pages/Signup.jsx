@@ -1,51 +1,30 @@
+// src/Pages/Signup.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  googleLogin,
-  emailSignup,
-} from "../firebase";
-import "../Style/Signup.css";
+import { googleLogin, emailSignup } from "../firebase";
 
 export default function Signup() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState("");
-  const navigate = useNavigate();
+  const nav = useNavigate();
 
-  const onEmailSignup = async (e) => {
+  const onEmail = async (e) => {
     e.preventDefault();
-
     try {
-      const result = await emailSignup(email, password);
-      const user = result.user;
-
-      localStorage.setItem("st_current", JSON.stringify({
-        id: user.uid,
-        name,
-        email: user.email
-      }));
-
-      window.dispatchEvent(new CustomEvent("authChange"));
-      navigate("/");
+      await emailSignup(email, password, name);
+      setErr("");
+      nav("/");
     } catch (error) {
       setErr(error.message);
     }
   };
 
-  const onGoogleSignup = async () => {
+  const onGoogle = async () => {
     try {
-      const result = await googleLogin();
-      const user = result.user;
-
-      localStorage.setItem("st_current", JSON.stringify({
-        id: user.uid,
-        name: user.displayName,
-        email: user.email
-      }));
-
-      window.dispatchEvent(new CustomEvent("authChange"));
-      navigate("/");
+      await googleLogin();
+      nav("/");
     } catch (error) {
       setErr(error.message);
     }
@@ -54,25 +33,15 @@ export default function Signup() {
   return (
     <div className="card auth-card">
       <h2>Register</h2>
-
-      <form className="form" onSubmit={onEmailSignup}>
-        <label>Name</label>
-        <input value={name} onChange={(e) => setName(e.target.value)} required />
-
-        <label>Email</label>
-        <input value={email} onChange={(e) => setEmail(e.target.value)} required />
-
-        <label>Password</label>
-        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-
+      <form onSubmit={onEmail}>
+        <label>Name<input value={name} onChange={(e)=>setName(e.target.value)} /></label>
+        <label>Email<input value={email} onChange={(e)=>setEmail(e.target.value)} required/></label>
+        <label>Password<input type="password" value={password} onChange={(e)=>setPassword(e.target.value)} required/></label>
         <button type="submit">Create Account</button>
       </form>
 
-      <button className="google-btn" onClick={onGoogleSignup}>
-        Sign Up with Google
-      </button>
-
-      {err && <div className="error">{err}</div>}
+      <button onClick={onGoogle} style={{ marginTop: 8 }}>Sign up with Google</button>
+      {err && <div style={{ color: "red" }}>{err}</div>}
     </div>
   );
 }

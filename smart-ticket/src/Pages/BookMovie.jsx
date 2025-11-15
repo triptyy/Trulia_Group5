@@ -1,142 +1,107 @@
-import React, { useEffect, useState } from "react";
-import fakeServer from "../api/fakeServer";
+import React, { useState, useEffect } from "react";
 import "../Style/BookMovie.css";
+import { listenEvents, bookSeats } from "../api/firestoreService";
 
-export default function BookMovie() {
+export default function BookMovie({ user }) {
   const [events, setEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [selectedSeats, setSelectedSeats] = useState([]);
-  const [msg, setMsg] = useState("");
+  const [booking, setBooking] = useState(false);
 
-  const load = () => setEvents(fakeServer.getEvents());
-
-  // Load events + listen for seat updates
   useEffect(() => {
-    load();
-    const onUpdate = () => load();
-    window.addEventListener("seatsUpdate", onUpdate);
-    return () => window.removeEventListener("seatsUpdate", onUpdate);
+    const unsub = listenEvents((data) => setEvents(data));
+    return () => unsub();
   }, []);
 
-  // Refresh selected event when events array changes
-  useEffect(() => {
-    if (selectedEvent) {
-      const updated = fakeServer.getEvent(selectedEvent.id);
-      if (updated) setSelectedEvent(updated);
-    }
-  }, [events]);
-
-  const openEvent = (ev) => {
-    setSelectedEvent(ev);
-    setSelectedSeats([]);
-    setMsg("");
-  };
-
-  const toggleSeat = (idx) => {
+  const toggleSeat = (index) => {
     if (!selectedEvent) return;
-    const ev = fakeServer.getEvent(selectedEvent.id);
-    if (!ev) return;
 
-    if (ev.seats[idx] !== 0) return; // only free seats
+    const isTaken = selectedEvent.seats[index] !== 0;
+    if (isTaken) return;
 
-    setSelectedSeats((prev) =>
-      prev.includes(idx)
-        ? prev.filter((x) => x !== idx)
-        : [...prev, idx]
-    );
+    if (selectedSeats.includes(index)) {
+      setSelectedSeats(selectedSeats.filter((seat) => seat !== index));
+    } else {
+      setSelectedSeats([...selectedSeats, index]);
+    }
   };
 
-  const doBook = () => {
-    try {
-      fakeServer.bookSeats({
-        eventId: selectedEvent.id,
-        seats: selectedSeats,
-      });
+  const handleBook = async () => {
+    if (!user) {
+      alert("Please login to book seats");
+      return;
+    }
+    if (!selectedEvent) return;
+    if (!selectedSeats.length) return;
 
-      setMsg("Booked successfully!");
+    setBooking(true);
+    try {
+      await bookSeats(selectedEvent.id, selectedSeats, user);
+      alert("Booked!");
       setSelectedSeats([]);
-      setEvents(fakeServer.getEvents());
     } catch (err) {
-      setMsg(err.message);
+      alert(err.message || "Booking failed");
+    } finally {
+      setBooking(false);
     }
   };
 
   return (
-    <div className="card">
-      <h2>Book a Show</h2>
+    <div className="book-movie-container">
+      <h1>Book a Show</h1>
 
-      <div className="events-row">
-        {/* Event List */}
-        <div className="events-list">
-          {events.map((ev) => (
-            <div
-              key={ev.id}
-              className={`event-item ${
-                selectedEvent && selectedEvent.id === ev.id ? "active" : ""
-              }`}
-              onClick={() => openEvent(ev)}
-            >
-              <div className="event-name">{ev.name}</div>
-              <div className="event-date">{ev.date}</div>
-              <div className="muted">
-                Available: {ev.seats.filter((s) => s === 0).length}
-              </div>
-            </div>
-          ))}
-        </div>
+      <div className="events-list">
+        {events.length === 0 && <p>Loading events...</p>}
 
-        {/* Seat Selection */}
-        <div className="event-detail">
-          {!selectedEvent ? (
-            <div className="muted">Select an event to see seats</div>
-          ) : (
-            <>
-              <h3>{selectedEvent.name}</h3>
-
-              <div className="seat-grid">
-                {selectedEvent.seats.map((s, i) => {
-                  const cls =
-                    s === 0
-                      ? selectedSeats.includes(i)
-                        ? "seat selected"
-                        : "seat free"
-                      : s === 1
-                      ? "seat mine"
-                      : "seat taken";
-
-                  return (
-                    <div
-                      key={i}
-                      className={cls}
-                      onClick={() => toggleSeat(i)}
-                    >
-                      {i + 1}
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className="controls">
-                <div>
-                  Selected:{" "}
-                  {selectedSeats.length > 0
-                    ? selectedSeats.join(", ")
-                    : "-"}
-                </div>
-
-                <button
-                  onClick={doBook}
-                  disabled={selectedSeats.length === 0}
-                >
-                  Book Selected
-                </button>
-              </div>
-
-              {msg && <div className="info">{msg}</div>}
-            </>
-          )}
-        </div>
+        {events.map((event) => (
+          <div
+            key={event.id}
+            className={`event-card ${
+              selectedEvent?.id === event.id ? "selected" : ""
+            }`}
+            onClick={() => {
+              setSelectedEvent(event);
+              setSelectedSeats([]);
+            }}
+          >
+            <h2>{event.name}</h2>
+            <p>{event.date}</p>
+          </div>
+        ))}
       </div>
+
+      {selectedEvent && (
+        <div className="seats-section">
+          <h2>Select Seats for {selectedEvent.name}</h2>
+
+          <div className="seats-grid">
+            {selectedEvent.seats.map((seat, index) => {
+              const isTaken = seat !== 0;
+              const isSelected = selectedSeats.includes(index);
+
+              return (
+                <div
+                  key={index}
+                  className={`seat 
+                    ${isTaken ? "taken" : ""} 
+                    ${isSelected ? "selected" : ""}`}
+                  onClick={() => toggleSeat(index)}
+                >
+                  {index + 1}
+                </div>
+              );
+            })}
+          </div>
+
+          <button
+            className="book-btn"
+            disabled={selectedSeats.length === 0 || booking}
+            onClick={handleBook}
+          >
+            {booking ? "Booking..." : "Book Selected Seats"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
